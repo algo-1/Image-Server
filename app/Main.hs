@@ -16,7 +16,8 @@ import Web.Scotty
 import Render (defaultWindow, render)
 import Shapes
 
-exampleDrawing = [(identity, polygon 11)] -- [(scale (point 0.5 0.25) <+> rotate 2 <+> translate (point 1.2 0.4), square)]
+exampleDrawing :: Drawing
+exampleDrawing = [( scale (point 0.5 0.5) <+>shearY (-0.5), square)] --  [(identity, polygon 11 )] -- [(scale (point 0.5 0.25) <+> rotate 2 <+> translate (point 1.2 0.4), square)]
 
 main :: IO ()
 main =

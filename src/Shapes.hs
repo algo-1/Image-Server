@@ -25,6 +25,9 @@ module Shapes (
     translate,
     rotate,
     scale,
+    shear,
+    shearX,
+    shearY,
     (<+>),
     inside,
     next,
@@ -109,6 +112,7 @@ data Transform
     | Scale Vector
     | Compose Transform Transform
     | Rotate Matrix
+    | Shear Vector
     deriving (Show)
 
 identity = Identity
@@ -119,6 +123,14 @@ scale = Scale
 
 rotate angle = Rotate $ matrix (cos angle) (-sin angle) (sin angle) (cos angle)
 
+shear = Shear
+
+shearX :: Double -> Transform
+shearX k = Shear (point k 0.0)
+
+shearY :: Double -> Transform
+shearY k = Shear (point 0.0 k)
+
 t0 <+> t1 = Compose t0 t1
 
 transform :: Transform -> Point -> Point
@@ -126,7 +138,9 @@ transform Identity x = x
 transform (Translate (Vector tx ty)) (Vector px py) = Vector (px - tx) (py - ty)
 transform (Scale (Vector tx ty)) (Vector px py) = Vector (px / tx) (py / ty)
 transform (Rotate m) p = invert m `mult` p
+transform (Shear (Vector tx ty)) (Vector px py) = Vector (px - tx * py) (py - ty * px) 
 transform (Compose t1 t2) p = transform t2 $ transform t1 p
+
 
 -- Drawings
 
