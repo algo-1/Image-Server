@@ -156,7 +156,6 @@ distance (Vector x y) = sqrt (x ** 2 + y ** 2)
 maxnorm :: Point -> Double
 maxnorm (Vector x y) = max (abs x) (abs y)
 
--- Mandelbrot related code
 next :: Point -> Point -> Point
 next (Vector u v) (Vector x y) = point (x * x - y * y + u) (2 * x * y + v)
 
@@ -181,6 +180,7 @@ isSameSide p p1 p2 =
 nPolygon :: Int -> [Point]
 nPolygon n = [rotatePoint (2 * pi / fromIntegral n * fromIntegral i) (point 1 0) | i <- [0 .. n-1]]
 
+-- clockwise rotation
 rotatePoint :: Double -> Point -> Point
 rotatePoint theta (Vector x y) =
   point (x * cos theta + y * sin theta) (-x * sin theta + y * cos theta)
