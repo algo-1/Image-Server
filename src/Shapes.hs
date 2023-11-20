@@ -91,7 +91,7 @@ ellipse = Ellipse
 polygon :: Int -> Shape Int
 polygon = Polygon
 
-triangle, pentagon, hexagon, heptagon, octagon, nonagon, decagon :: Shape Integer
+triangle, pentagon, hexagon, heptagon, octagon, nonagon, decagon :: Shape Int
 triangle = Polygon 3
 pentagon = Polygon 5
 hexagon = Polygon 6
