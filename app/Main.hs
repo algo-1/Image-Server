@@ -30,8 +30,9 @@ main =
         get "/greet/" $ do
             html  "Hello there"
       -}
-      get "/output.png" $ do 
-        file "output.png"
+      get "/images/:file" $ do 
+        filename <- param "file"
+        file filename
 
       get "/greet/:name" $ do
         name <- param "name"
@@ -53,4 +54,4 @@ responseDSL dslProgram =
             H.h2 "DSL Program:"
             H.pre $ H.toHtml $ show dslProgram
             H.h2 "Generated Image:"
-            H.img H.! A.src "/output.png" H.! A.alt "Rendered Drawing"
+            H.img H.! A.src "/images/output.png" H.! A.alt "Rendered Drawing"
