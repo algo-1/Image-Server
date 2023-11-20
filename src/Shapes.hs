@@ -11,6 +11,16 @@ module Shapes (
     circle,
     square,
     mandelbrotSet,
+    rectangle,
+    polygon,
+    triangle, 
+    pentagon, 
+    hexagon, 
+    heptagon, 
+    octagon, 
+    nonagon, 
+    decagon,
+    ellipse,
     identity,
     translate,
     rotate,
@@ -19,6 +29,7 @@ module Shapes (
     inside,
     next,
     fairlyClose,
+    nPolygon
 )
 where
 
@@ -58,18 +69,37 @@ type Point = Vector
 point :: Double -> Double -> Point
 point = vector
 
-data Shape
+data Shape a
     = Empty
     | Circle
     | Square
     | MandelbrotSet
+    | Rectangle
+    | Polygon a
+    | Ellipse
     deriving (Show)
 
-empty, circle, square, mandelbrotSet :: Shape
+
+empty, circle, square, mandelbrotSet, rectangle, ellipse :: Shape a
 empty = Empty
 circle = Circle
 square = Square
 mandelbrotSet = MandelbrotSet
+rectangle = Rectangle
+ellipse = Ellipse
+
+polygon :: Int -> Shape Int
+polygon = Polygon
+
+triangle, pentagon, hexagon, heptagon, octagon, nonagon, decagon :: Shape Integer
+triangle = Polygon 3
+pentagon = Polygon 5
+hexagon = Polygon 6
+heptagon = Polygon 7
+octagon = Polygon 8
+nonagon = Polygon 9
+decagon = Polygon 10 
+
 
 -- Transformations
 
@@ -100,22 +130,25 @@ transform (Compose t1 t2) p = transform t2 $ transform t1 p
 
 -- Drawings
 
-type Drawing = [(Transform, Shape)]
-    
+type Drawing = [(Transform, Shape Int)]
+
 
 -- interpretation function for drawings
 
 inside :: Point -> Drawing -> Bool
 inside p d = any (inside1 p) d
 
-inside1 :: Point -> (Transform, Shape) -> Bool
+inside1 :: Point -> (Transform, Shape Int) -> Bool
 inside1 p (t, s) = insides (transform t p) s
 
-insides :: Point -> Shape -> Bool
+insides :: Point -> Shape Int -> Bool
 p `insides` Empty = False
 p `insides` Circle = distance p <= 1
 p `insides` Square = maxnorm p <= 1
 p `insides` MandelbrotSet = all fairlyClose (take 1000 (mandelbrot p))
+p `insides` Rectangle = insideRect p
+p `insides` Polygon x = insidePolygon p $ nPolygon x
+p `insides` Ellipse = insideEllipse p
 
 distance :: Point -> Double
 distance (Vector x y) = sqrt (x ** 2 + y ** 2)
@@ -132,3 +165,25 @@ fairlyClose (Vector u v) = (u * u + v * v) < 100
 
 mandelbrot :: Point -> [Point]
 mandelbrot p = iterate (next p) (point 0 0)
+
+insideRect :: Point -> Bool
+insideRect (Vector x y ) = abs x <= 1 && abs y <= 0.5
+
+insidePolygon :: Point -> [Point] -> Bool
+insidePolygon p ps = all (uncurry (isSameSide p)) edges
+  where
+    edges = zip ps (tail ps ++ [head ps])
+
+isSameSide :: Point -> Point -> Point -> Bool
+isSameSide p p1 p2 =
+  (getY p - getY p1) * (getX p2 - getX p1) - (getX p - getX p1) * (getY p2 - getY p1)  <= 0
+
+nPolygon :: Int -> [Point]
+nPolygon n = [rotatePoint (2 * pi / fromIntegral n * fromIntegral i) (point 1 0) | i <- [0 .. n-1]]
+
+rotatePoint :: Double -> Point -> Point
+rotatePoint theta (Vector x y) =
+  point (x * cos theta + y * sin theta) (-x * sin theta + y * cos theta)
+
+insideEllipse :: Point -> Bool
+insideEllipse (Vector x y ) = x**2/2 + y**2 <= 1

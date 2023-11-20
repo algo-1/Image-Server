@@ -16,42 +16,38 @@ import Web.Scotty
 import Render (defaultWindow, render)
 import Shapes
 
-exampleDrawing = [(scale (point 0.5 0.25) <+> rotate 2 <+> translate (point 1.2 0.4), square)]
+exampleDrawing = [(identity, polygon 11)] -- [(scale (point 0.5 0.25) <+> rotate 2 <+> translate (point 1.2 0.4), square)]
 
 main :: IO ()
 main =
   do
-    render "output.png" defaultWindow exampleDrawing
+    -- print $ show $ nPolygon 3
+    render "black_and_white.png" defaultWindow exampleDrawing
     scotty 3000 $ do
       get "/" $ do
-        html $ responseDSL exampleDrawing
+        html $ response exampleDrawing
 
-      {-
-        get "/greet/" $ do
-            html  "Hello there"
-      -}
       get "/images/:file" $ do 
         filename <- param "file"
         file filename
 
-      get "/greet/:name" $ do
-        name <- param "name"
-        html $ response name
-
-response :: Text -> Text
-response n = do
-  R.renderHtml $ do
-    H.h1 ("Hello " >> H.toHtml n)
-
-
-responseDSL :: Drawing -> Text
-responseDSL dslProgram =
+-- TODO: make it take a list of drawings and map 
+response :: Drawing -> Text
+response dslProgram =
   R.renderHtml  $
     H.docTypeHtml $ do 
         H.head $ 
-            H.title "DSL Program and Image"
+            H.title "Image Server"
         H.body $ do
-            H.h2 "DSL Program:"
+            H.h2 "Source Code"
             H.pre $ H.toHtml $ show dslProgram
-            H.h2 "Generated Image:"
-            H.img H.! A.src "/images/output.png" H.! A.alt "Rendered Drawing"
+            H.h2 "Black and White Image"
+            H.img H.! A.src "/images/black_and_white.png" 
+            H.h2 "Coloured Image"
+            H.img H.! A.src "/images/black_and_white.png"
+            H.h2 "Masked Image"
+            H.img H.! A.src "/images/black_and_white.png"
+            H.h2 "Transformed Image 1"
+            H.img H.! A.src "/images/black_and_white.png"
+            H.h2 "Transformed Image 2"
+            H.img H.! A.src "/images/black_and_white.png"
