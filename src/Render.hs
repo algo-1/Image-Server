@@ -1,10 +1,6 @@
 module Render (Window, defaultWindow, samples, render) where
 
-import Codec.Picture (
-    PixelRGB8 (PixelRGB8),
-    generateImage,
-    writePng,
- )
+import Codec.Picture
 import Data.Map (Map, fromList, lookup)
 import Shapes
 
@@ -42,7 +38,7 @@ render path win sh = writePng path $ generateImage pixRenderer w h
   where
     Window _ _ (w, h) = win
 
-    pixRenderer x y = PixelRGB8 c c c where c = colorForImage $ mapPoint win (x, y)
+    pixRenderer x y = PixelRGB8 r g b where (r,g,b) = colorForImage $ mapPoint win (x, y)
 
     mapPoint :: Window -> (Int, Int) -> Point
     mapPoint _ p = lookup2 p locations_map
@@ -59,6 +55,5 @@ render path win sh = writePng path $ generateImage pixRenderer w h
     locations_map :: Map (Int, Int) Point
     locations_map = fromList locations
 
-    colorForImage p
-        | p `inside` sh = 255
-        | otherwise = 0
+    colorForImage :: Point -> (Pixel8,Pixel8,Pixel8)
+    colorForImage p = getFirstColour p sh

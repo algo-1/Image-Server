@@ -32,15 +32,18 @@ module Shapes (
     inside,
     next,
     fairlyClose,
-    nPolygon
+    nPolygon,
+    getFirstColour
 )
 where
+import Codec.Picture (Pixel8)
 
 -- Utilities
 
 data Vector = Vector Double Double
     deriving (Show)
 
+vector :: Double -> Double -> Vector
 vector = Vector
 
 cross :: Vector -> Vector -> Double
@@ -61,8 +64,10 @@ data Matrix = Matrix Vector Vector
 matrix :: Double -> Double -> Double -> Double -> Matrix
 matrix a b c d = Matrix (Vector a b) (Vector c d)
 
+getX :: Vector -> Double
 getX (Vector x y) = x
 
+getY :: Vector -> Double
 getY (Vector x y) = y
 
 -- Shapes
@@ -72,36 +77,38 @@ type Point = Vector
 point :: Double -> Double -> Point
 point = vector
 
-data Shape a
+data Shape
     = Empty
-    | Circle
-    | Square
-    | MandelbrotSet
-    | Rectangle
-    | Polygon a
-    | Ellipse
+    | Circle Colour
+    | Square Colour
+    | MandelbrotSet Colour
+    | Rectangle Colour
+    | Polygon Int Colour
+    | Ellipse Colour
     deriving (Show)
 
 
-empty, circle, square, mandelbrotSet, rectangle, ellipse :: Shape a
+empty :: Shape
 empty = Empty
+
+circle, square, mandelbrotSet, rectangle, ellipse :: Colour -> Shape
 circle = Circle
 square = Square
 mandelbrotSet = MandelbrotSet
 rectangle = Rectangle
 ellipse = Ellipse
 
-polygon :: Int -> Shape Int
+polygon :: Int -> Colour -> Shape
 polygon = Polygon
 
-triangle, pentagon, hexagon, heptagon, octagon, nonagon, decagon :: Shape Int
+triangle, pentagon, hexagon, heptagon, octagon, nonagon, decagon :: Colour -> Shape
 triangle = Polygon 3
 pentagon = Polygon 5
 hexagon = Polygon 6
 heptagon = Polygon 7
 octagon = Polygon 8
 nonagon = Polygon 9
-decagon = Polygon 10 
+decagon = Polygon 10
 
 
 -- Transformations
@@ -115,14 +122,19 @@ data Transform
     | Shear Vector
     deriving (Show)
 
+identity :: Transform
 identity = Identity
 
+translate :: Vector -> Transform
 translate = Translate
 
+scale :: Vector -> Transform
 scale = Scale
 
+rotate :: Double -> Transform
 rotate angle = Rotate $ matrix (cos angle) (-sin angle) (sin angle) (cos angle)
 
+shear :: Vector -> Transform
 shear = Shear
 
 shearX :: Double -> Transform
@@ -131,6 +143,7 @@ shearX k = Shear (point k 0.0)
 shearY :: Double -> Transform
 shearY k = Shear (point 0.0 k)
 
+(<+>) :: Transform -> Transform -> Transform
 t0 <+> t1 = Compose t0 t1
 
 transform :: Transform -> Point -> Point
@@ -144,7 +157,7 @@ transform (Compose t1 t2) p = transform t2 $ transform t1 p
 
 -- Drawings
 
-type Drawing = [(Transform, Shape Int)]
+type Drawing = [(Transform, Shape)]
 
 
 -- interpretation function for drawings
@@ -152,17 +165,17 @@ type Drawing = [(Transform, Shape Int)]
 inside :: Point -> Drawing -> Bool
 inside p d = any (inside1 p) d
 
-inside1 :: Point -> (Transform, Shape Int) -> Bool
+inside1 :: Point -> (Transform, Shape) -> Bool
 inside1 p (t, s) = insides (transform t p) s
 
-insides :: Point -> Shape Int -> Bool
+insides :: Point -> Shape-> Bool
 p `insides` Empty = False
-p `insides` Circle = distance p <= 1
-p `insides` Square = maxnorm p <= 1
-p `insides` MandelbrotSet = all fairlyClose (take 1000 (mandelbrot p))
-p `insides` Rectangle = insideRect p
-p `insides` Polygon x = insidePolygon p $ nPolygon x
-p `insides` Ellipse = insideEllipse p
+p `insides` Circle _ = distance p <= 1
+p `insides` Square _ = maxnorm p <= 1
+p `insides` MandelbrotSet _ = all fairlyClose (take 1000 (mandelbrot p))
+p `insides` Rectangle _ = insideRect p
+p `insides` Polygon x _ = insidePolygon p $ nPolygon x
+p `insides` Ellipse _ = insideEllipse p
 
 distance :: Point -> Double
 distance (Vector x y) = sqrt (x ** 2 + y ** 2)
@@ -201,3 +214,27 @@ rotatePoint theta (Vector x y) =
 
 insideEllipse :: Point -> Bool
 insideEllipse (Vector x y ) = x**2/2 + y**2 <= 1
+
+
+-- colours
+type Colour = (Pixel8, Pixel8, Pixel8)
+
+getColour :: Shape -> Colour
+getColour Empty = (0, 0, 0)
+getColour (Circle c) = c
+getColour (Square c) = c
+getColour (MandelbrotSet c)= c
+getColour (Rectangle c) = c
+getColour (Polygon _ c) = c
+getColour (Ellipse c) = c
+
+inside2 :: Point -> (Transform, Shape) -> (Bool, Colour)
+inside2 p (t, s) = (insides (transform t p) s, getColour s)
+
+-- if point not in any shape colour black, else colour with the colour of the first shape it is in
+getFirstColour :: Point -> Drawing -> Colour
+getFirstColour p d = firstColour $ map (inside2 p) d
+                   where firstColour :: [(Bool, Colour)] -> Colour
+                         firstColour ((False, _):xs) = firstColour xs
+                         firstColour ((True, c):_)    = c
+                         firstColour _ = (0, 0, 0)

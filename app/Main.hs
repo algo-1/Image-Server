@@ -7,17 +7,12 @@ import qualified Text.Blaze.Html.Renderer.Text as R
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Web.Scotty
-
--- I don't actually use any attributes in this example
--- so I commented this next line out, but this is how
--- you get them imported when you need them.
---
-
 import Render (defaultWindow, render)
+
 import Shapes
 
 exampleDrawing :: Drawing
-exampleDrawing = [( scale (point 0.5 0.5) <+>shearY (-0.5), square)] --  [(identity, polygon 11 )] -- [(scale (point 0.5 0.25) <+> rotate 2 <+> translate (point 1.2 0.4), square)]
+exampleDrawing = [( scale (point 0.5 0.5) <+>shearY (-0.5), square (225, 225, 225)), (identity, hexagon (200, 100, 200))] --  [(identity, polygon 11 )] -- [(scale (point 0.5 0.25) <+> rotate 2 <+> translate (point 1.2 0.4), square)]
 
 main :: IO ()
 main =
