@@ -4,6 +4,8 @@ module Shapes (
     Vector,
     Transform,
     Drawing,
+    Mask,
+    MaskedDrawing,
     point,
     getX,
     getY,
@@ -33,7 +35,8 @@ module Shapes (
     next,
     fairlyClose,
     nPolygon,
-    getFirstColour
+    getFirstColour,
+    mask
 )
 where
 import Codec.Picture (Pixel8)
@@ -232,9 +235,23 @@ inside2 :: Point -> (Transform, Shape) -> (Bool, Colour)
 inside2 p (t, s) = (insides (transform t p) s, getColour s)
 
 -- if point not in any shape colour black, else colour with the colour of the first shape it is in
-getFirstColour :: Point -> Drawing -> Colour
-getFirstColour p d = firstColour $ map (inside2 p) d
-                   where firstColour :: [(Bool, Colour)] -> Colour
-                         firstColour ((False, _):xs) = firstColour xs
-                         firstColour ((True, c):_)    = c
-                         firstColour _ = (0, 0, 0)
+getFirstColour :: Point -> Either Drawing MaskedDrawing -> Colour
+getFirstColour p (Left d) = firstColour $ map (inside2 p) d
+
+getFirstColour p (Right (d, m)) = insideMask m p $ firstColour $ map (inside2 p) d
+                    
+firstColour :: [(Bool, Colour)] -> Colour
+firstColour ((False, _):xs) = firstColour xs
+firstColour ((True, c):_)   = c
+firstColour _ = (0, 0, 0)
+
+
+-- masking -- the mask colour is ignored, when a mask is used, only points in the mask are displayed
+type Mask = (Transform, Shape)
+type MaskedDrawing = (Drawing, Mask)
+mask :: Mask -> Drawing -> MaskedDrawing
+mask m d = (d, m)
+
+
+insideMask :: Mask -> Point -> Colour -> Colour
+insideMask m p c = if inside1 p m then c else (0, 0, 0)

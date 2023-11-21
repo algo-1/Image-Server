@@ -33,7 +33,7 @@ coords :: Window -> [[(Int, Int)]]
 coords (Window _ _ (w, h)) = [[(x, y) | x <- [0 .. w]] | y <- [0 .. h]]
 
 -- render a drawing into an image, then save into a file
-render :: String -> Window -> Drawing -> IO ()
+render :: String -> Window -> Either Drawing MaskedDrawing -> IO ()
 render path win sh = writePng path $ generateImage pixRenderer w h
   where
     Window _ _ (w, h) = win
