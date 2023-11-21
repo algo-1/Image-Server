@@ -217,7 +217,7 @@ isSameSide p p1 p2 =
   (getY p - getY p1) * (getX p2 - getX p1) - (getX p - getX p1) * (getY p2 - getY p1)  <= 0
 
 nPolygon :: Int -> [Point]
-nPolygon n = [rotatePoint (2 * pi / fromIntegral n * fromIntegral i) (point 1 0) | i <- [0 .. n-1]]
+nPolygon n = [rotatePoint (2 * pi / fromIntegral n * fromIntegral i) (point 0 1) | i <- [0 .. n-1]]
 
 -- clockwise rotation
 rotatePoint :: Double -> Point -> Point
