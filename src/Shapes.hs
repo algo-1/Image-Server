@@ -158,6 +158,12 @@ transform (Translate (Vector tx ty)) (Vector px py) = Vector (px - tx) (py - ty)
 transform (Scale (Vector tx ty)) (Vector px py) = Vector (px / tx) (py / ty)
 transform (Rotate m) p = invert m `mult` p
 transform (Shear (Vector tx ty)) (Vector px py) = Vector (px - tx * py) (py - ty * px) 
+transform (Compose (Translate (Vector ax ay)) (Translate (Vector bx by))) p = transform (Translate (Vector (ax + bx) (ay + by))) p
+transform (Compose (Scale (Vector ax ay)) (Scale (Vector bx by))) p = transform (Scale (Vector (ax*bx) (ay*by))) p
+transform (Compose (Shear (Vector ax ay)) (Shear (Vector bx by))) p = transform (Shear (Vector (ax+bx) (ay+by))) p
+transform (Compose (Rotate (Matrix (Vector a1 b1) (Vector c1 d1))) (Rotate (Matrix (Vector a2 b2) (Vector c2 d2)))) p = 
+  let rotatedMatrix = Rotate (Matrix (Vector (a1 * a2 + b1 * c2) (a1 * b2 + b1 * d2)) (Vector (c1 * a2 + d1 * c2) (c1 * b2 + d1 * d2)))
+  in transform rotatedMatrix p
 transform (Compose t1 t2) p = transform t2 $ transform t1 p
 
 

@@ -26,6 +26,13 @@ maskedDrawing = maskedImage $ mask m drawing
 polygonsDrawing :: Drawing
 polygonsDrawing = [(scale (point 0.4 0.4), triangle (200, 150, 20)), (scale (point 0.6 0.6), polygon 4 (100, 150, 200)), (scale (point 0.8 0.8), pentagon (220, 125, 50)), (scale (point 1 1), hexagon (20, 90, 10)), (scale (point 1.2 1.2), octagon (255, 255, 255))]
 
+tripleRotateDoubleTranslate :: Drawing
+tripleRotateDoubleTranslate = [(rotate 0.523599 <+> rotate 0.523599 <+> rotate 0.523599 <+> translate (point 0.5 0.5) <+> translate (point (-1) (-1)), rectangle (100, 150, 200))]
+
+-- rotate 90 deg then translate -0.5 -0.5 should be equivalent to the above multiple rotations and translations
+rotate90Translate :: Drawing
+rotate90Translate = [(rotate 1.5708 <+> translate (point (-0.5) (-0.5)), rectangle (100, 150, 200))]
+
 main :: IO ()
 main =
   do
@@ -33,11 +40,12 @@ main =
     render "non_masked.png" defaultWindow $ image drawing
     render "masked.png" defaultWindow maskedDrawing
     render "polygons.png" defaultWindow $ image polygonsDrawing
-
-
+    render "optimisation_comparison.png" defaultWindow $ image rotate90Translate
+    render "optimisations.png" defaultWindow $ image tripleRotateDoubleTranslate
+    
     scotty 3000 $ do
       get "/" $ do
-        html $ response [image polygonsDrawing, image drawing, image [m], maskedDrawing]
+        html $ response [image polygonsDrawing, image drawing, image [m], maskedDrawing, image rotate90Translate, image tripleRotateDoubleTranslate]
 
       get "/images/:file" $ do 
         filename <- param "file"
@@ -69,3 +77,13 @@ response dslProgram =
             H.h4 "Source Code"
             H.pre $ H.toHtml $ show $ dslProgram !! 3       
             H.img H.! A.src "/images/masked.png"
+
+            H.h2 "Transformations"      
+            H.h4 "Source Code"
+            H.pre $ H.toHtml $ show $ dslProgram !! 4    
+            H.img H.! A.src "/images/optimisation_comparison.png"
+
+            H.h2 "Merging Multiple Transformations Optimisation"      
+            H.h4 "Source Code"
+            H.pre $ H.toHtml $ show $ dslProgram !! 5    
+            H.img H.! A.src "/images/optimisations.png"
