@@ -6,6 +6,9 @@ module Shapes (
     Drawing,
     Mask,
     MaskedDrawing,
+    Image,
+    image,
+    maskedImage,
     point,
     getX,
     getY,
@@ -161,7 +164,13 @@ transform (Compose t1 t2) p = transform t2 $ transform t1 p
 -- Drawings
 
 type Drawing = [(Transform, Shape)]
+data Image = Image Drawing | MaskedImage (Drawing, Mask)
+  deriving Show
 
+image :: Drawing -> Image
+image = Image
+maskedImage :: (Drawing, Mask) -> Image
+maskedImage = MaskedImage
 
 -- interpretation function for drawings
 
@@ -235,10 +244,10 @@ inside2 :: Point -> (Transform, Shape) -> (Bool, Colour)
 inside2 p (t, s) = (insides (transform t p) s, getColour s)
 
 -- if point not in any shape colour black, else colour with the colour of the first shape it is in
-getFirstColour :: Point -> Either Drawing MaskedDrawing -> Colour
-getFirstColour p (Left d) = firstColour $ map (inside2 p) d
+getFirstColour :: Point -> Image -> Colour
+getFirstColour p (Image d) = firstColour $ map (inside2 p) d
 
-getFirstColour p (Right (d, m)) = insideMask m p $ firstColour $ map (inside2 p) d
+getFirstColour p (MaskedImage (d, m)) = insideMask m p $ firstColour $ map (inside2 p) d
                     
 firstColour :: [(Bool, Colour)] -> Colour
 firstColour ((False, _):xs) = firstColour xs
@@ -249,9 +258,9 @@ firstColour _ = (0, 0, 0)
 -- masking -- the mask colour is ignored, when a mask is used, only points in the mask are displayed
 type Mask = (Transform, Shape)
 type MaskedDrawing = (Drawing, Mask)
+
 mask :: Mask -> Drawing -> MaskedDrawing
 mask m d = (d, m)
-
 
 insideMask :: Mask -> Point -> Colour -> Colour
 insideMask m p c = if inside1 p m then c else (0, 0, 0)

@@ -19,8 +19,8 @@ drawing = [( scale (point 0.5 0.5) <+>shearY (-0.5), square (225, 225, 225)), (i
 m :: Mask
 m = (scale (point 0.65 0.65) <+> translate (point 1.2 0.4), rectangle (255, 255, 255))
 
-maskedDrawing:: Either Drawing MaskedDrawing
-maskedDrawing = Right $ mask m drawing
+maskedDrawing :: Image
+maskedDrawing = maskedImage $ mask m drawing
 
 
 polygonsDrawing :: Drawing
@@ -29,21 +29,21 @@ polygonsDrawing = [(scale (point 0.4 0.4), triangle (200, 150, 20)), (scale (poi
 main :: IO ()
 main =
   do
-    render "the_mask.png" defaultWindow $ Left [m]
-    render "non_masked.png" defaultWindow $ Left drawing
+    render "the_mask.png" defaultWindow $ image [m]
+    render "non_masked.png" defaultWindow $ image drawing
     render "masked.png" defaultWindow maskedDrawing
-    render "polygons.png" defaultWindow $ Left polygonsDrawing
+    render "polygons.png" defaultWindow $ image polygonsDrawing
 
 
     scotty 3000 $ do
       get "/" $ do
-        html $ response [Left polygonsDrawing, Left drawing, Left [m], maskedDrawing]
+        html $ response [image polygonsDrawing, image drawing, image [m], maskedDrawing]
 
       get "/images/:file" $ do 
         filename <- param "file"
         file filename
 
-response :: [Either Drawing MaskedDrawing]-> Text
+response :: [Image]-> Text
 response dslProgram =
   R.renderHtml  $
     H.docTypeHtml $ do 
